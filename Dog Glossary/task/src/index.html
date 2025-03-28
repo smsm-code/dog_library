@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Hello, World!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 10px;
+            margin-right: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dog Glossary</h1>
+    <button id="button-random-dog">Show Random Dog</button>
+    <label for="input-breed"></label>
+    <input id="input-breed" placeholder="Enter a breed" />
+    <button id="button-show-breed">Show Breed</button>
+    <button id="button-show-sub-breed">Show Sub-Breed</button>
+    <button id="button-show-all">Show All Breeds</button>
+    <div id="content"></div>
+    <script>
+        async function getRandomDog() {
+            // ランダム犬画像用のエンドポイント
+            const response = await fetch('https://dog.ceo/api/breeds/image/random');
+            const data = await response.json();
+            return data;
+        }
+        
+        async function getBreedDog(breed) {
+            // 特定犬種の画像を取得するエンドポイント
+            const response = await fetch(`https://dog.ceo/api/breed/${breed}/images/random`);
+            const data = await response.json();
+            return data;
+        }
+        
+        async function getSubBreedDog(breed) {
+            // 特定犬種の画像を取得するエンドポイント
+            const response = await fetch(`https://dog.ceo/api/breed/${breed}/list`);
+            const data = await response.json();
+            return data;
+        }
+        
+        async function getAllBreeds() {
+            // 全犬種のリストを取得するエンドポイント
+            const response = await fetch('https://dog.ceo/api/breeds/list/all');
+            const data = await response.json();
+            return data;
+        }
+        
+        const container = document.getElementById('content');
+        const randomDogBtn = document.getElementById('button-random-dog');
+        const breedDogBtn = document.getElementById('button-show-breed');
+        const subDogBtn = document.getElementById('button-show-sub-breed');
+        const allDogBtn = document.getElementById('button-show-all');
+        
+        randomDogBtn.addEventListener('click', async () => {
+            container.innerHTML = '';
+            try {
+                const data = await getRandomDog();
+                const img = document.createElement('img');
+                img.src = data.message;
+                img.alt = 'Random Dog';
+                container.appendChild(img);
+            } catch (error) {
+                console.error('Error fetching dog image:', error);
+            }
+        });
+        
+        breedDogBtn.addEventListener('click', async () => {
+            container.innerHTML = '';
+            const input_breed = document.getElementById('input-breed').value.toLowerCase();
+            try {
+                const data = await getBreedDog(input_breed);
+                if (data.status === 'success') {
+                    const img = document.createElement('img');
+                    img.src = data.message;
+                    img.alt = 'Breed Dog';
+                    container.appendChild(img);
+                } else {
+                    const p = document.createElement('p');
+                    p.textContent = 'Breed not found!';
+                    container.appendChild(p);
+                }
+            } catch (error) {
+                const p = document.createElement('p');
+                p.textContent = 'Breed not found!';
+                container.appendChild(p);
+            }
+        });
+        
+        subDogBtn.addEventListener('click', async () => {
+            container.innerHTML = '';
+            const input_breed = document.getElementById('input-breed').value.toLowerCase();
+            try {
+                const data = await getSubBreedDog(input_breed);
+                if (data.status === 'success') {
+                    const ol = document.createElement('ol');
+                    // 空のリストか判定
+                    if (data.message.length > 0) {
+                        data.message.forEach(subBreed => {
+                            const li = document.createElement('li');
+                            li.textContent = subBreed;
+                            ol.appendChild(li);
+                        });
+                        container.appendChild(ol);
+                    } else {
+                        const p = document.createElement('p');
+                        p.textContent = 'No sub-breeds found!';
+                        container.appendChild(p);
+                    }
+                } else {
+                    const p = document.createElement('p');
+                    p.textContent = 'Breed not found!';
+                    container.appendChild(p);
+                }
+            } catch (error) {
+                const p = document.createElement('p');
+                p.textContent = 'Breed not found!';
+                container.appendChild(p);
+            }
+        });
+        
+        allDogBtn.addEventListener('click', async () => {
+            container.innerHTML = '';
+            try {
+                const data = await getAllBreeds();
+                if (data.status === 'success') {
+                    const ol = document.createElement('ol');
+                    for (const breed in data.message) {
+                        const li = document.createElement('li');
+                        li.textContent = breed;
+                        if (data.message[breed].length > 0) {
+                            const subOl = document.createElement('ul')
+                            data.message[breed].forEach(subBreed => {
+                                const subLi = document.createElement('li');
+                                subLi.textContent = subBreed;
+                                subOl.appendChild(subLi);
+                            });
+                            li.appendChild(subOl);
+                        }
+                        ol.appendChild(li);
+                    }
+                    container.appendChild(ol);
+                } else {
+                    const p = document.createElement('p');
+                    p.textContent = 'No breeds found!';
+                    container.appendChild(p);
+                }
+            } catch (error) {
+                const p = document.createElement('p');
+                p.textContent = 'No breeds found!';
+                container.appendChild(p);
+            }
+        });
+        
+    </script>
+</body>
+</html>
